@@ -1,0 +1,87 @@
+---
+// src/components/Verse.astro
+//
+// Component untuk dipakai di file .mdx blog, terintegrasi ke Dialog.astro
+// bawaan theme (Astro Rocket) - Dialog.astro TIDAK dimodifikasi sama sekali,
+// component ini cuma jadi "consumer" baru dari Dialog yang sudah ada.
+//
+// PENTING: sesuaikan path import Dialog di bawah dengan lokasi asli Dialog.astro
+// di struktur theme kamu, misalnya:
+//   import Dialog from '@/components/primitives/Dialog/Dialog.astro';
+// atau relative path kalau theme-nya tidak pakai alias '@/'.
+import Dialog from '@/components/primitives/Dialog/Dialog.astro';
+
+export interface Props {
+  book: string;
+  chapter: number | string;
+  verse?: string;   // "16" (satu ayat) atau "1-5" (rentang) - kosong = 1 pasal penuh
+  version?: string; // default "tb"
+  label?: string;   // teks trigger custom. Kalau tidak diisi, coba pakai children (slot),
+                     // baru fallback ke auto-generate dari book/chapter/verse.
+}
+
+const {
+  book,
+  chapter,
+  verse,
+  version = 'tb',
+  label,
+} = Astro.props;
+
+// Ganti ke domain deployment Bible API kamu, atau taruh di .env sebagai
+// PUBLIC_BIBLE_API_URL
+const API_BASE = import.meta.env.PUBLIC_BIBLE_API_URL ?? 'https://bible-api-kamu.vercel.app';
+
+const query = verse ? `?verse=${encodeURIComponent(verse)}` : '';
+const url = `${API_BASE}/api/${version}/${book}/${chapter}${query}`;
+
+let verses: { verse: number; content: string; type: string }[] = [];
+let error: string | null = null;
+
+try {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`API merespons status ${res.status}`);
+  }
+  const data = await res.json();
+  verses = data.verses.filter((v: { type: string }) => v.type === 'content');
+} catch (err) {
+  error = err instanceof Error ? err.message : 'Gagal memuat ayat';
+}
+
+// Label auto sebagai fallback terakhir kalau `label` prop dan children/slot
+// dua-duanya tidak diisi. Untuk tulisan final, lebih baik selalu isi `label`
+// manual (mis. label="Yoh 3:16") karena auto ini pakai apa adanya dari props
+// (huruf kecil sesuai slug book, dst).
+const autoLabel = `${book} ${chapter}${verse ? `:${verse}` : ''}`;
+const hasSlotContent = Astro.slots.has('default');
+
+// ID unik per instance dialog di halaman, disanitasi supaya valid sebagai id HTML
+const dialogId = `verse-${book}-${chapter}-${verse ?? 'all'}-${version}`.replace(/[^a-zA-Z0-9-]/g, '-');
+
+const dialogTitle = label ?? autoLabel;
+const dialogDescription = `Terjemahan: ${version.toUpperCase()}`;
+---
+
+<button
+  type="button"
+  onclick={`openDialog('${dialogId}')`}
+  class="underline decoration-dotted underline-offset-4 text-foreground hover:text-foreground/80 transition-colors"
+>
+  {label ? label : hasSlotContent ? <slot /> : autoLabel}
+</button>
+
+<Dialog id={dialogId} title={dialogTitle} description={dialogDescription} size="md">
+  {error ? (
+    <p class="text-sm text-red-500">Gagal memuat ayat: {error}</p>
+  ) : (
+    <div class="space-y-2">
+      {verses.map((v) => (
+        <p class="text-sm leading-relaxed text-foreground">
+          <sup class="text-foreground-muted mr-1">{v.verse}</sup>
+          {v.content}
+        </p>
+      ))}
+    </div>
+  )}
+</Dialog>

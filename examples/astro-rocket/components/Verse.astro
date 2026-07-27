@@ -1,0 +1,85 @@
+---
+// src/components/blog/Verse.astro
+//
+// Dipakai di file .mdx blog, dua gaya sama-sama valid:
+//
+//   <Verse book="yoh" chapter="3" verse="16" version="tb" label="Yoh 3:16" />
+//
+//   <Verse book="yoh" chapter="3" verse="16" version="tb">Yoh 3:16</Verse>
+//
+// Fetch ke Bible API terjadi di sini (frontmatter Astro = server/build time),
+// jadi aman dari CORS dan, kalau situsnya SSG, hasilnya ke-bake statis.
+//
+// Dialog.astro milik theme TIDAK diubah sama sekali - component ini cuma
+// jadi consumer baru dari Dialog yang sudah ada (pakai slot + global
+// window.openDialog()/closeDialog() yang sudah di-expose Dialog itu sendiri).
+
+// Sesuaikan path ini ke lokasi Dialog.astro yang sebenarnya di repo kamu.
+// Berdasarkan struktur astro-rocket: src/components/ui/overlay/Dialog.astro
+import Dialog from '@/components/ui/overlay/Dialog.astro';
+
+export interface Props {
+  book: string;
+  chapter: number | string;
+  verse?: string; // "16" (satu ayat) atau "1-5" (rentang) - opsional, kosong = 1 pasal penuh
+  version?: string; // default "tb"
+  label?: string; // teks trigger custom. Kalau kosong, fallback ke children (slot), lalu ke auto-label
+}
+
+const {
+  book,
+  chapter,
+  verse,
+  version = 'tb',
+  label,
+} = Astro.props;
+
+// Ganti ke domain deployment Bible API kamu, atau taruh di .env sebagai
+// PUBLIC_BIBLE_API_URL
+const API_BASE = import.meta.env.PUBLIC_BIBLE_API_URL ?? 'https://bible-api-kamu.vercel.app';
+
+const query = verse ? `?verse=${encodeURIComponent(verse)}` : '';
+const url = `${API_BASE}/api/${version}/${book}/${chapter}${query}`;
+
+let verses: { verse: number; content: string; type: string }[] = [];
+let error: string | null = null;
+
+try {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`API merespons status ${res.status}`);
+  }
+  const data = await res.json();
+  verses = data.verses.filter((v: { type: string }) => v.type === 'content');
+} catch (err) {
+  error = err instanceof Error ? err.message : 'Gagal memuat ayat';
+}
+
+// Label trigger: prop `label` > children (slot) > auto-generate dari props
+const autoLabel = `${book} ${chapter}${verse ? `:${verse}` : ''}`;
+const slotLabel = Astro.slots.has('default') ? await Astro.slots.render('default') : null;
+const refLabel = label ?? slotLabel ?? autoLabel;
+
+const dialogId = `verse-${book}-${chapter}-${verse ?? 'all'}-${version}`.replace(/[^a-zA-Z0-9-]/g, '-');
+---
+
+<button
+  type="button"
+  class="text-primary underline decoration-dotted underline-offset-4 hover:decoration-solid font-medium cursor-pointer"
+  onclick={`openDialog('${dialogId}')`}
+  set:html={refLabel}
+/>
+
+<Dialog id={dialogId} title={refLabel} description={version.toUpperCase()} size="sm">
+  {error ? (
+    <p class="text-sm text-red-500">Gagal memuat ayat: {error}</p>
+  ) : (
+    <div class="space-y-2 text-foreground">
+      {verses.map((v) => (
+        <p class="leading-relaxed">
+          <sup class="text-foreground-muted mr-1">{v.verse}</sup>{v.content}
+        </p>
+      ))}
+    </div>
+  )}
+</Dialog>

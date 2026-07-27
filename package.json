@@ -1,0 +1,10 @@
+{
+  "name": "bible-api",
+  "version": "1.0.0",
+  "description": "Bible API - scraping alkitab.mobi (SABDA), deployed as Vercel Serverless Functions",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "cheerio": "^1.0.0"
+  }
+}
