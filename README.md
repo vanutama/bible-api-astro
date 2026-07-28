@@ -150,4 +150,4 @@ Kalau kamu pakai **Astro Rocket** (yang punya `Dialog.astro` di `src/components/
 ## Catatan penting
 
 - **Timeout Hobby plan.** Vercel Hobby (free) membatasi durasi eksekusi function; `vercel.json` di sini sudah set `maxDuration: 10` supaya kompatibel di free tier. Edge cache di atas juga mengurangi risiko ini karena request yang sudah pernah di-hit tidak perlu scrape ulang.
-- **Sumber data:** alkitab.mobi milik SABDA — pastikan penggunaan tetap sesuai izin yang sudah didapat.
+- **Sumber data:** alkitab.mobi milik SABDA
