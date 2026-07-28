@@ -114,19 +114,19 @@ examples/
     └── content/blog/contoh-artikel.mdx
 ```
 
-Kalau kamu pakai **Astro Rocket** (yang punya `Dialog.astro` di `src/components/ui/overlay/`), pakai `examples/astro-rocket/components/Verse.astro` — ini yang sudah terintegrasi langsung ke `Dialog` bawaan theme lewat `openDialog(id)`/`<Dialog>`, tanpa mengubah `Dialog.astro` sama sekali.
+Kalau kamu pakai **Astro Rocket** (yang punya `Dialog.astro` di `src/components/ui/overlay/dialog`), pakai `examples/astro-rocket/components/Verse.astro` — ini yang sudah terintegrasi langsung ke `Dialog` bawaan theme lewat `openDialog(id)`/`<Dialog>`, tanpa mengubah `Dialog.astro` sama sekali.
 
 ### Langkah pakai di project Astro Rocket kamu
 
 1. Copy `examples/astro-rocket/components/Verse.astro` ke `src/components/blog/Verse.astro` di project Astro Rocket kamu.
-2. **Cek path import `Dialog`** di baris atas frontmatter `Verse.astro` — sudah diarahkan ke `@/components/ui/overlay/Dialog.astro` sesuai struktur folder Astro Rocket, tapi sesuaikan lagi kalau ternyata beda di repo kamu (misal `Dialog.astro` ada di dalam subfolder `Dialog/`). `Dialog.astro` sendiri **tidak diubah sama sekali**.
+2. **Cek path import `Dialog`** di baris atas frontmatter `Verse.astro` — sudah diarahkan ke `@/components/ui/overlay/Dialog.astro` sesuai struktur folder Astro Rocket, tapi sesuaikan lagi kalau ternyata beda di repo kamu (misal `Dialog.astro` ada di dalam subfolder `Dialog/Dialog/`). `Dialog.astro` sendiri **tidak diubah sama sekali**.
 3. Tambahkan env var di `.env` project Astro:
    ```
    PUBLIC_BIBLE_API_URL=https://bible-api-kamu.vercel.app
    ```
 4. Di file `.mdx` manapun, import dan pakai (dua gaya sama-sama valid — perhatikan huruf besar `<Verse>`/`</Verse>` harus konsisten kalau pakai children):
    ```mdx
-   import Verse from '../../components/blog/Verse.astro';
+   import Verse from '@/components/blog/Verse.astro';
 
    Yesus mengajarkan soal kasih Bapa di <Verse book="yoh" chapter="3" verse="16" version="tb" label="Yoh 3:16" />.
 
