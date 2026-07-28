@@ -65,21 +65,58 @@ const dialogId = `verse-${book}-${chapter}-${verse ?? 'all'}-${version}`.replace
 
 <button
   type="button"
-  class="text-primary underline decoration-dotted underline-offset-4 hover:decoration-solid font-medium cursor-pointer"
+  class="font-semibold text-foreground underline underline-offset-[3px] decoration-brand-500 hover:decoration-foreground transition-colors duration-150"
   onclick={`openDialog('${dialogId}')`}
   set:html={refLabel}
 />
 
-<Dialog id={dialogId} title={refLabel} description={version.toUpperCase()} size="sm">
-  {error ? (
-    <p class="text-sm text-red-500">Gagal memuat ayat: {error}</p>
-  ) : (
-    <div class="space-y-2 text-foreground">
-      {verses.map((v) => (
-        <p class="leading-relaxed">
-          <sup class="text-foreground-muted mr-1">{v.verse}</sup>{v.content}
-        </p>
-      ))}
-    </div>
-  )}
-</Dialog>
+{/*
+  PENTING: markup Dialog (yang block-level, ada <div> di dalamnya) TIDAK
+  boleh dirender langsung di sini, karena <Verse> sering dipakai di tengah
+  paragraf MDX yang otomatis dibungkus <p> - dan HTML tidak mengizinkan
+  <div> nested di dalam <p>. Kalau itu terjadi, browser otomatis MENUTUP
+  paragraf lebih awal begitu ketemu <div>, jadi teks setelah <Verse> "kepental"
+  jadi paragraf baru sendiri.
+
+  Solusinya: taruh Dialog di dalam <template> (browser tidak render/parse
+  isinya sebagai bagian live DOM, jadi aman di dalam <p> apapun isinya),
+  lalu "pindahkan" (hoist) ke document.body via JS setelah halaman load.
+*/}
+<template data-verse-dialog-template={dialogId}>
+  <Dialog id={dialogId} title={refLabel} description={version.toUpperCase()} size="sm">
+    {error ? (
+      <p class="text-sm text-red-500">Gagal memuat ayat: {error}</p>
+    ) : (
+      <div class="space-y-2 text-foreground">
+        {verses.map((v) => (
+          <p class="leading-relaxed">
+            <sup class="text-foreground-muted mr-1">{v.verse}</sup>{v.content}
+          </p>
+        ))}
+      </div>
+    )}
+  </Dialog>
+</template>
+
+<script>
+  // Pindahkan isi tiap <template data-verse-dialog-template> ke
+  // document.body. Dialog.astro sendiri TIDAK diubah - dia sudah listen ke
+  // event 'astro:page-load' buat re-scan & inisialisasi dialog baru di DOM,
+  // jadi cukup dispatch ulang event itu setelah hoisting selesai.
+  function hoistVerseDialogs() {
+    const templates = document.querySelectorAll<HTMLTemplateElement>(
+      'template[data-verse-dialog-template]:not([data-verse-hoisted])'
+    );
+    if (!templates.length) return;
+
+    templates.forEach((tpl) => {
+      tpl.setAttribute('data-verse-hoisted', 'true');
+      document.body.appendChild(tpl.content);
+    });
+
+    document.dispatchEvent(new Event('astro:page-load'));
+  }
+
+  hoistVerseDialogs();
+  document.addEventListener('astro:page-load', hoistVerseDialogs);
+</script>
