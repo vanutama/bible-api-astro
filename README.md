@@ -40,7 +40,16 @@ vercel
 ## Endpoint
 
 ### `GET /api/versions`
-Daftar semua versi/terjemahan yang didukung.
+Daftar semua versi/terjemahan yang didukung — diambil dari [daftar resmi alkitab.mobi](https://alkitab.mobi/tb/versions/), mencakup:
+
+- **Bahasa Indonesia:** `ayt`, `tb`, `tl`, `milt`, `sb2010`, `sb2000`, `kszi`, `kskk`, `wbtcdr`, `vmd`, `amd`, `okkh`, `tsi`, `bis`, `tmv`, `bsd`, `fayh`, `ende`, `sbdr`, `kl1879`, `kl1863`, `baba`, `ambdr`, `keasberry`, `keasberry1866`, `ldkdr`, `avb`, `iban`
+- **Bahasa suku:** `jawa`, `jawa2006`, `jawa2`, `jawasur`, `sunda`, `sunda2`, `madura`, `bauzi`, `bali`, `ngaju`, `sasak`, `bugis`, `makasar`, `toraja`, `duri`, `gorontalo`, `gorontalo_2006`, `balantak`, `bambam`, `kaili_daa`, `mongondow`, `aralle`, `napu`, `sangir`, `taa`, `rote`, `galela`, `yali`, `tabaru`, `karo`, `simalungun`, `toba`, `dairi`, `minang`, `nias`, `mentawai`, `lampung`, `aceh`, `mamasa`, `berik`, `manggarai`, `sabu`, `kupang`, `abun`, `meyah`, `uma`, `yawa`
+- **Bahasa Inggris:** `net`, `nasb`, `hcsb`, `leb`, `niv`, `esv`, `nrsv`, `reb`, `nkjv`, `av`, `amp`, `nlt`, `gnb`, `erv`, `evd`, `bbe`, `msg`, `phillips`, `deib`, `gullah`, `cev`, `cevuk`, `gwv`
+- **Mandarin:** `cuv`, `cuvs`
+- **Naskah asli/kritis:** `hebrew`, `greek`, `greek_str`, `greeksr`, `greeksr_str`
+- **Interlinear:** `aytst`, `tbst`, `tlst`, `avbst`, `kjv`, `nasbst`, `netst`
+
+> Sebagian versi (terutama bahasa suku) di sumbernya cuma punya Perjanjian Baru. Kalau diminta buku Perjanjian Lama untuk versi tsb, alkitab.mobi sendiri yang bakal balikin halaman kosong/error — bukan dari API ini. Daftar lengkap versi ada di `lib/versions.js`.
 
 ### `GET /api/:version/:book/:chapter?verse=`
 Ambil satu pasal penuh, satu ayat spesifik, atau rentang ayat.
