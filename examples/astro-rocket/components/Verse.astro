@@ -15,8 +15,8 @@
 // window.openDialog()/closeDialog() yang sudah di-expose Dialog itu sendiri).
 
 // Sesuaikan path ini ke lokasi Dialog.astro yang sebenarnya di repo kamu.
-// Berdasarkan struktur astro-rocket: src/components/ui/overlay/Dialog/Dialog.astro
-import Dialog from '@/components/ui/overlay/Dialog/Dialog.astro';
+// Berdasarkan struktur astro-rocket: src/components/ui/overlay/Dialog.astro
+import Dialog from '@/components/ui/overlay/Dialog.astro';
 
 export interface Props {
   book: string;
@@ -55,10 +55,15 @@ try {
   error = err instanceof Error ? err.message : 'Gagal memuat ayat';
 }
 
-// Label trigger: prop `label` > children (slot) > auto-generate dari props
-const autoLabel = `${book} ${chapter}${verse ? `:${verse}` : ''}`;
+// Trigger label: teks yang tampil & bisa diklik di paragraf - bebas custom.
+// Prioritas: prop `label` > children (slot) > auto-format dari book/chapter/verse
+const autoRef = `${book} ${chapter}${verse ? `:${verse}` : ''}`;
 const slotLabel = Astro.slots.has('default') ? await Astro.slots.render('default') : null;
-const refLabel = label ?? slotLabel ?? autoLabel;
+const triggerLabel = label ?? slotLabel ?? autoRef;
+
+// Judul di dalam modal: SELALU alamat ayat asli, apapun isi `label`/children-nya
+// di atas. Book di-kapital-in huruf pertamanya saja (slug "yoh" -> "Yoh").
+const dialogTitle = `${book.charAt(0).toUpperCase()}${book.slice(1)} ${chapter}${verse ? `:${verse}` : ''}`;
 
 const dialogId = `verse-${book}-${chapter}-${verse ?? 'all'}-${version}`.replace(/[^a-zA-Z0-9-]/g, '-');
 ---
@@ -67,7 +72,7 @@ const dialogId = `verse-${book}-${chapter}-${verse ?? 'all'}-${version}`.replace
   type="button"
   class="font-semibold text-foreground underline underline-offset-[3px] decoration-brand-500 hover:decoration-foreground transition-colors duration-150"
   onclick={`openDialog('${dialogId}')`}
-  set:html={refLabel}
+  set:html={triggerLabel}
 />
 
 {/*
@@ -83,7 +88,7 @@ const dialogId = `verse-${book}-${chapter}-${verse ?? 'all'}-${version}`.replace
   lalu "pindahkan" (hoist) ke document.body via JS setelah halaman load.
 */}
 <template data-verse-dialog-template={dialogId}>
-  <Dialog id={dialogId} title={refLabel} description={version.toUpperCase()} size="sm">
+  <Dialog id={dialogId} title={dialogTitle} description={version.toUpperCase()} size="sm">
     {error ? (
       <p class="text-sm text-red-500">Gagal memuat ayat: {error}</p>
     ) : (
